@@ -112,9 +112,14 @@ function drawCaption(ctx, caption, tagline, width, height) {
   ctx.textAlign = 'center';
 
   if (cleanTag) {
-    const tagSize = Math.max(16, height * 0.028);
+    let tagSize = Math.max(16, height * 0.028);
     ctx.font = `700 ${tagSize}px system-ui, sans-serif`;
     try { ctx.letterSpacing = `${Math.round(tagSize * 0.35)}px`; } catch (e) { /* older canvas */ }
+    while (ctx.measureText(cleanTag).width > width * 0.9 && tagSize > 12) {
+      tagSize -= 2;
+      ctx.font = `700 ${tagSize}px system-ui, sans-serif`;
+      try { ctx.letterSpacing = `${Math.round(tagSize * 0.35)}px`; } catch (e) { /* older canvas */ }
+    }
     ctx.fillStyle = '#ffd166';
     ctx.fillText(cleanTag, width / 2, base - height * 0.105);
     try { ctx.letterSpacing = '0px'; } catch (e) { /* older canvas */ }
