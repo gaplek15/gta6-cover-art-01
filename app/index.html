@@ -5,74 +5,96 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vice Cover Studio</title>
 <link rel="stylesheet" href="./style.css">
+<script type="module" src="./src/main.js"></script>
 </head>
 <body>
 <main class="app">
-  <section class="controls" aria-label="Cover editor">
+  <section class="controls">
     <h1>Vice Cover Studio</h1>
-    <p class="tag">Your photo, made into a sunset-city poster. Three panels, one caption, export and share.</p>
+    <p class="tagline">Your photo, made into a sunset-city poster. Three panels, one caption, export and share.</p>
 
-    <fieldset class="panels">
+    <fieldset>
       <legend>Photos — one per panel</legend>
       <div class="slot" data-panel="0">
-        <span class="slot-name">Hero panel</span>
-        <label>Upload <input type="file" accept="image/*" data-photo="0"></label>
-        <span class="samples">Try:
+        <h2>Hero panel</h2>
+        <label>Upload a photo
+          <input type="file" accept="image/*" data-photo="0">
+        </label>
+        <div class="samples">
           <button type="button" data-sample="boulevard.jpg" data-panel="0">Boulevard</button>
           <button type="button" data-sample="pier.jpg" data-panel="0">Pier</button>
           <button type="button" data-sample="neon.jpg" data-panel="0">Neon</button>
           <button type="button" data-sample="sunset.jpg" data-panel="0">Sunset</button>
-        </span>
-        <label>Zoom <input type="range" min="100" max="220" value="100" data-zoom="0"></label>
+        </div>
+        <label>Zoom
+          <input type="range" min="100" max="220" value="100" data-zoom="0">
+        </label>
       </div>
       <div class="slot" data-panel="1">
-        <span class="slot-name">Panel two</span>
-        <label>Upload <input type="file" accept="image/*" data-photo="1"></label>
-        <span class="samples">Try:
+        <h2>Panel two</h2>
+        <label>Upload a photo
+          <input type="file" accept="image/*" data-photo="1">
+        </label>
+        <div class="samples">
           <button type="button" data-sample="boulevard.jpg" data-panel="1">Boulevard</button>
           <button type="button" data-sample="pier.jpg" data-panel="1">Pier</button>
           <button type="button" data-sample="neon.jpg" data-panel="1">Neon</button>
           <button type="button" data-sample="sunset.jpg" data-panel="1">Sunset</button>
-        </span>
-        <label>Zoom <input type="range" min="100" max="220" value="100" data-zoom="1"></label>
+        </div>
+        <label>Zoom
+          <input type="range" min="100" max="220" value="100" data-zoom="1">
+        </label>
       </div>
       <div class="slot" data-panel="2">
-        <span class="slot-name">Panel three</span>
-        <label>Upload <input type="file" accept="image/*" data-photo="2"></label>
-        <span class="samples">Try:
+        <h2>Panel three</h2>
+        <label>Upload a photo
+          <input type="file" accept="image/*" data-photo="2">
+        </label>
+        <div class="samples">
           <button type="button" data-sample="boulevard.jpg" data-panel="2">Boulevard</button>
           <button type="button" data-sample="pier.jpg" data-panel="2">Pier</button>
           <button type="button" data-sample="neon.jpg" data-panel="2">Neon</button>
           <button type="button" data-sample="sunset.jpg" data-panel="2">Sunset</button>
-        </span>
-        <label>Zoom <input type="range" min="100" max="220" value="100" data-zoom="2"></label>
+        </div>
+        <label>Zoom
+          <input type="range" min="100" max="220" value="100" data-zoom="2">
+        </label>
       </div>
-      <button id="one-photo" type="button">Use the hero photo in all three panels</button>
-      <p class="hint">Drag the preview to move a photo inside its panel.</p>
     </fieldset>
 
-    <label>Caption <input id="caption" type="text" maxlength="40" value="Sunset Heist"></label>
-    <label>Tagline <input id="tagline" type="text" maxlength="30" value="VICE COAST"></label>
+    <button type="button" id="one-photo">Use the hero photo in all three panels</button>
+    <p class="hint">Drag the preview to move a photo inside its panel.</p>
 
-    <fieldset class="sizes">
+    <label>Caption
+      <input type="text" id="caption" maxlength="40" value="Sunset Heist">
+    </label>
+    <label>Tagline
+      <input type="text" id="tagline" maxlength="30" value="VICE COAST">
+    </label>
+
+    <fieldset>
       <legend>Post size</legend>
-      <button type="button" data-size="square">Square 1080 × 1080</button>
-      <button type="button" data-size="portrait">Portrait 1080 × 1350</button>
-      <button type="button" data-size="wide" class="active">Wide 1920 × 1080</button>
+      <div class="choices">
+        <button type="button" data-size="square">Square 1080 × 1080</button>
+        <button type="button" data-size="portrait">Portrait 1080 × 1350</button>
+        <button type="button" data-size="wide" class="active">Wide 1920 × 1080</button>
+      </div>
     </fieldset>
 
-    <fieldset class="grades">
+    <fieldset>
       <legend>Colour grade</legend>
-      <button type="button" data-grade="sunset" class="active">Sunset</button>
-      <button type="button" data-grade="neon">Neon</button>
-      <button type="button" data-grade="noir">Noir</button>
+      <div class="choices">
+        <button type="button" data-grade="sunset" class="active">Sunset</button>
+        <button type="button" data-grade="neon">Neon</button>
+        <button type="button" data-grade="noir">Noir</button>
+      </div>
     </fieldset>
 
-    <button id="export" type="button">Export PNG</button>
+    <button type="button" id="export">Export PNG</button>
     <p id="status" role="status"></p>
   </section>
-  <canvas id="cover" width="1920" height="1080" aria-label="The cover preview"></canvas>
+
+  <canvas id="cover" width="1920" height="1080"></canvas>
 </main>
-<script type="module" src="./src/main.js"></script>
 </body>
 </html>

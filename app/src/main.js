@@ -1,14 +1,13 @@
-// Wires the page: three photo slots with zoom and drag-to-pan, a caption and
-// a tagline, three post sizes, three colour grades, and a PNG export. A
-// `?shot=` query sets up a fixed scene for a screenshot instead (shots.js).
+// Page wiring for Vice Cover Studio: photos, zoom, drag-to-pan, size,
+// grade, caption, export, and the ?shot= handoff for screenshots.
 
 import { drawCover, panelsFor, SIZES } from './cover.js';
 import { runShot } from './shots.js';
 
 const canvas = document.getElementById('cover');
+const statusEl = document.getElementById('status');
 const captionInput = document.getElementById('caption');
 const taglineInput = document.getElementById('tagline');
-const status = document.getElementById('status');
 
 const photos = [null, null, null];
 const views = [
@@ -18,152 +17,193 @@ const views = [
 ];
 let sizeKey = 'wide';
 let grade = 'sunset';
-let activePanel = -1;
-let dragStart = null;
+
+function setStatus(text) {
+  statusEl.textContent = text;
+}
 
 function redraw() {
   drawCover(canvas, photos, views, captionInput.value, taglineInput.value, sizeKey, grade);
 }
 
-/** Loads an image from a URL, resolving once it can be drawn. */
-export function loadImage(url) {
+function loadImage(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = url;
+    img.onerror = () => reject(new Error(`could not load ${src}`));
+    img.src = src;
   });
 }
 
-async function setPhoto(panel, url) {
+function resetView(panel) {
+  views[panel] = { zoom: 1, dx: 0, dy: 0 };
+  const slider = document.querySelector(`[data-zoom="${panel}"]`);
+  if (slider) slider.value = '100';
+}
+
+async function putPhoto(panel, src) {
   try {
-    photos[panel] = await loadImage(url);
-    views[panel] = { zoom: 1, dx: 0, dy: 0 };
-    const slider = document.querySelector(`[data-zoom="${panel}"]`);
-    if (slider) slider.value = 100;
+    const img = await loadImage(src);
+    photos[panel] = img;
+    resetView(panel);
     redraw();
-  } catch (e) {
-    status.textContent = 'That photo could not be loaded.';
+    return true;
+  } catch {
+    setStatus('That photo could not be loaded.');
+    return false;
   }
 }
 
-document.querySelectorAll('[data-photo]').forEach((input) => {
-  input.addEventListener('change', (e) => {
-    const file = e.target.files[0];
+// Upload inputs.
+for (const input of document.querySelectorAll('[data-photo]')) {
+  const panel = Number(input.dataset.photo);
+  input.addEventListener('change', () => {
+    const file = input.files?.[0];
     if (!file) return;
-    setPhoto(Number(input.dataset.photo), URL.createObjectURL(file));
+    const url = URL.createObjectURL(file);
+    loadImage(url)
+      .then((img) => {
+        photos[panel] = img;
+        resetView(panel);
+        redraw();
+      })
+      .catch(() => setStatus('That photo could not be loaded.'));
   });
-});
+}
 
-document.querySelectorAll('[data-sample]').forEach((button) => {
+// Sample buttons.
+for (const button of document.querySelectorAll('[data-sample]')) {
   button.addEventListener('click', () => {
-    setPhoto(Number(button.dataset.panel), `samples/${button.dataset.sample}`);
+    const panel = Number(button.dataset.panel);
+    putPhoto(panel, `samples/${button.dataset.sample}`);
   });
-});
+}
 
-document.querySelectorAll('[data-zoom]').forEach((slider) => {
+// Zoom sliders.
+for (const slider of document.querySelectorAll('[data-zoom]')) {
+  const panel = Number(slider.dataset.zoom);
   slider.addEventListener('input', () => {
-    views[Number(slider.dataset.zoom)].zoom = Number(slider.value) / 100;
+    views[panel].zoom = Number(slider.value) / 100;
     redraw();
   });
-});
+}
 
+// One photo in all three panels.
 document.getElementById('one-photo').addEventListener('click', () => {
   if (!photos[0]) return;
   photos[1] = photos[0];
   photos[2] = photos[0];
   redraw();
-  status.textContent = 'The hero photo now fills all three panels.';
+  setStatus('The hero photo now fills all three panels.');
 });
 
+// Caption and tagline redraw on every keystroke.
 captionInput.addEventListener('input', redraw);
 taglineInput.addEventListener('input', redraw);
 
-document.querySelectorAll('[data-size]').forEach((button) => {
+// Size buttons.
+for (const button of document.querySelectorAll('[data-size]')) {
   button.addEventListener('click', () => {
-    document.querySelectorAll('[data-size]').forEach((b) => b.classList.remove('active'));
-    button.classList.add('active');
     sizeKey = button.dataset.size;
+    for (const b of document.querySelectorAll('[data-size]')) b.classList.toggle('active', b === button);
     redraw();
   });
-});
+}
 
-document.querySelectorAll('[data-grade]').forEach((button) => {
+// Grade buttons.
+for (const button of document.querySelectorAll('[data-grade]')) {
   button.addEventListener('click', () => {
-    document.querySelectorAll('[data-grade]').forEach((b) => b.classList.remove('active'));
-    button.classList.add('active');
     grade = button.dataset.grade;
+    for (const b of document.querySelectorAll('[data-grade]')) b.classList.toggle('active', b === button);
     redraw();
   });
-});
+}
 
+// Export PNG.
 document.getElementById('export').addEventListener('click', () => {
   canvas.toBlob((blob) => {
-    if (!blob) return;
-    const size = SIZES[sizeKey];
+    if (!blob) {
+      setStatus('That photo could not be loaded.');
+      return;
+    }
+    const filename = `vice-cover-${sizeKey}-${canvas.width}x${canvas.height}.png`;
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `vice-cover-${sizeKey}-${size.width}x${size.height}.png`;
+    a.href = url;
+    a.download = filename;
     a.click();
-    status.textContent = `Saved ${a.download}`;
+    URL.revokeObjectURL(url);
+    setStatus(`Saved ${filename}`);
   }, 'image/png');
 });
 
-/** Canvas coordinates of a pointer event, in the canvas's own pixels. */
-function canvasPoint(e) {
-  const box = canvas.getBoundingClientRect();
-  return {
-    x: ((e.clientX - box.left) / box.width) * canvas.width,
-    y: ((e.clientY - box.top) / box.height) * canvas.height,
-  };
+// Drag-to-pan: drag a photo inside its own panel.
+let drag = null;
+
+function panelAt(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  const x = ((clientX - rect.left) / rect.width) * canvas.width;
+  const y = ((clientY - rect.top) / rect.height) * canvas.height;
+  const panels = panelsFor(canvas.width, canvas.height);
+  for (let i = 0; i < panels.length; i++) {
+    const p = panels[i];
+    if (x >= p.x && x < p.x + p.w && y >= p.y && y < p.y + p.h) return { index: i, x, y, panel: p };
+  }
+  return null;
 }
 
-canvas.addEventListener('pointerdown', (e) => {
-  const p = canvasPoint(e);
-  const panels = panelsFor(canvas.width, canvas.height);
-  const hit = panels.findIndex((r) => p.x >= r.x && p.x < r.x + r.w && p.y >= r.y && p.y < r.y + r.h);
-  if (hit < 0 || !photos[hit]) return;
-  activePanel = hit;
-  dragStart = { x: p.x, y: p.y, dx: views[hit].dx, dy: views[hit].dy };
-  canvas.setPointerCapture(e.pointerId);
+canvas.addEventListener('pointerdown', (event) => {
+  const hit = panelAt(event.clientX, event.clientY);
+  if (!hit || !photos[hit.index]) return;
+  drag = { index: hit.index, lastX: hit.x, lastY: hit.y, panel: hit.panel };
+  canvas.classList.add('dragging');
+  canvas.setPointerCapture(event.pointerId);
 });
 
-canvas.addEventListener('pointermove', (e) => {
-  if (activePanel < 0 || !dragStart) return;
-  const p = canvasPoint(e);
-  const rect = panelsFor(canvas.width, canvas.height)[activePanel];
-  const view = views[activePanel];
-  view.dx = Math.max(-0.35, Math.min(0.35, dragStart.dx + (p.x - dragStart.x) / rect.w));
-  view.dy = Math.max(-0.35, Math.min(0.35, dragStart.dy + (p.y - dragStart.y) / rect.h));
+canvas.addEventListener('pointermove', (event) => {
+  if (!drag) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = ((event.clientX - rect.left) / rect.width) * canvas.width;
+  const y = ((event.clientY - rect.top) / rect.height) * canvas.height;
+  const view = views[drag.index];
+  view.dx = Math.max(-0.35, Math.min(0.35, view.dx + (x - drag.lastX) / drag.panel.w));
+  view.dy = Math.max(-0.35, Math.min(0.35, view.dy + (y - drag.lastY) / drag.panel.h));
+  drag.lastX = x;
+  drag.lastY = y;
   redraw();
 });
 
-canvas.addEventListener('pointerup', () => {
-  activePanel = -1;
-  dragStart = null;
-});
+function endDrag() {
+  drag = null;
+  canvas.classList.remove('dragging');
+}
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
 
-const query = new URLSearchParams(location.search);
-const shot = query.get('shot');
-
-/** Applies a fixed scene (for screenshots): size, grade, words, photos. */
+// A scene for screenshots: set size, grade, caption, tagline, load the
+// three scene photos and redraw. Returns a promise that resolves once
+// the photos are in place.
 async function applyScene(scene) {
   sizeKey = scene.size;
   grade = scene.grade;
   captionInput.value = scene.caption;
   taglineInput.value = scene.tagline;
-  document.querySelectorAll('[data-size]').forEach((b) => b.classList.toggle('active', b.dataset.size === scene.size));
-  document.querySelectorAll('[data-grade]').forEach((b) => b.classList.toggle('active', b.dataset.grade === scene.grade));
-  for (let i = 0; i < 3; i++) {
-    photos[i] = await loadImage(`samples/${scene.photos[i]}`);
-    views[i] = { zoom: 1, dx: 0, dy: 0 };
-  }
+  for (const b of document.querySelectorAll('[data-size]')) b.classList.toggle('active', b.dataset.size === sizeKey);
+  for (const b of document.querySelectorAll('[data-grade]')) b.classList.toggle('active', b.dataset.grade === grade);
+  await Promise.all(scene.photos.map((name, i) =>
+    loadImage(`samples/${name}`)
+      .then((img) => { photos[i] = img; resetView(i); })
+      .catch(() => { /* leave the panel empty on a missing sample */ }),
+  ));
   redraw();
 }
 
+const query = new URLSearchParams(window.location.search);
+const shot = query.get('shot');
 if (shot) {
   runShot(shot, query, applyScene);
 } else {
   redraw();
+  // Anton arrives after first paint; repaint once it is ready.
   document.fonts.load('100px Anton').then(redraw).catch(() => {});
 }

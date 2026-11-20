@@ -4,37 +4,30 @@
 [![rank](https://make.fun/badge/gta6-cover-art-01/gaplek15/gta6-cover-art-01/rank.svg)](https://make.fun/bounty/gta6-cover-art-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
 [![reward](https://make.fun/badge/gta6-cover-art-01/gaplek15/gta6-cover-art-01/reward.svg)](https://make.fun/bounty/gta6-cover-art-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
 
-A web app that turns your photo and a caption into a GTA-style poster
-cover, built for [make.fun's GTA 6 cover art bounty](https://make.fun/bounty/gta6-cover-art-01)
-($250 in USDC, top 50 entries share the prize).
+Turn your photo into a GTA-style three-panel poster cover. Pick a photo
+for each panel (or use one photo for all three), add a caption, choose a
+colour grade and a post size, then export a PNG to share. Built for the
+[make.fun gta6-cover-art-01 bounty](https://make.fun/bounty/gta6-cover-art-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01) ($250, top 50 share).
 
 ## What it does
 
-- **Three panels** — a hero panel plus two smaller ones, in the
-  multi-panel poster look. Wide covers put the hero on the left;
-  square and portrait covers stack it on top.
-- **Any photo** — upload your own photo into each panel, or try the
-  four built-in samples. Zoom each panel with a slider, drag the
-  preview to move a photo inside its panel, or fill all three panels
-  with the hero photo in one click.
-- **Bold lettering** — a caption in big Anton capitals (SIL Open Font
-  License, shipped under `app/fonts/`) with a black outline and a
-  magenta drop shadow, plus a small spaced tagline above it.
-- **Colour grades** — Sunset, Neon and Noir washes over the whole
-  cover, with a vignette.
-- **Three post sizes** — Square 1080 × 1080, Portrait 1080 × 1350 and
-  Wide 1920 × 1080. One click exports the cover as a PNG.
-- **Offline** — plain static files under `app/`, no build step, no
-  network request. Serve `app/` with any static server and open
-  `index.html`.
+- Three-panel poster layout: a big hero panel plus two supporting panels.
+- Any photo per panel — upload your own or tap one of the four built-in samples.
+- Bold Anton lettering for the caption, with a gold spaced tagline above it.
+- Three colour grades: Sunset, Neon, Noir.
+- Three post sizes: Square 1080 × 1080, Portrait 1080 × 1350, Wide 1920 × 1080.
+- Drag a photo inside its panel to reposition it; zoom each panel from 100% to 220%.
+- Fully offline: no network request, no tracking, no account. Everything
+  (scripts, styles, font, samples) ships in `app/`.
 
 ## How to run
 
 ```sh
-node serve.ts        # serves app/ on http://localhost:8080
+node serve.ts
 ```
 
-Or serve `app/` with any static HTTP server and open `index.html`.
+Then open http://localhost:8080 in a browser. (Node 22; the port can be
+changed with `node serve.ts --port 8080`.)
 
 ## How to hand it in
 
@@ -42,22 +35,17 @@ Or serve `app/` with any static HTTP server and open `index.html`.
 mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 ```
 
-`main.ts` copies `app/` and `screenshots/` to the output folder and
-writes `dossier.json` with the kit's vendored library
-(`vendor/makefun-app.ts`, unchanged).
+This copies `app/` and `screenshots/` into `out/` and writes
+`out/dossier.json`.
 
 ## Screenshots
 
-- `1-cover.jpg` — an exported Wide cover (1920 × 1080).
-- `2-editor.jpg` — the editor in a browser with photos loaded.
-- `3-portrait.jpg` — an exported Portrait cover (1080 × 1350).
-- `4-square.jpg` — an exported Square cover (1080 × 1080, Neon grade).
-
-The photos in the screenshots are AI-made samples shipped with the
-app (the two starter samples plus two made for this entry) — no real
-person's photo, no Rockstar artwork, no Rockstar font.
+- `screenshots/1-cover.jpg` — an exported Wide cover, Sunset grade, "Sunset Heist".
+- `screenshots/2-editor.jpg` — the editor with photos loaded in all three panels.
+- `screenshots/3-portrait.jpg` — an exported Portrait cover, Sunset grade.
+- `screenshots/4-square.jpg` — an exported Square cover, Neon grade, "Neon Nights".
 
 ## License
 
-MIT. See `LICENSE`. The Anton font is licensed under the SIL Open
-Font License 1.1 (see `app/fonts/OFL.txt`).
+MIT — see `LICENSE`. The Anton font in `app/fonts/` is under the SIL Open
+Font License 1.1, see `app/fonts/OFL.txt`.
